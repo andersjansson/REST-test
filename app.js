@@ -5,10 +5,10 @@
 
 var express = require('express');
 var routes = require('./routes');
-var todo = require('./routes/todo');
+var post = require('./routes/post');
 var http = require('http');
 var path = require('path');
-var db = require('./models')
+var db = require('./models');
 
 var app = express();
 
@@ -31,10 +31,11 @@ if ('development' == app.get('env')) {
 }
 
 app.get('/', routes.index);
-app.get('/todos', todo.index);
-app.post('/todos', todo.create);
-app.put('/todos/:id', todo.update);
-app.delete('/todos/:id', todo.destroy);
+app.get('/posts', post.index);
+app.get('posts/:id', post.index);
+app.post('/posts', post.create);
+app.put('/posts/:id', post.update);
+app.delete('/posts/:id', post.destroy);
 
 db
   .sequelize

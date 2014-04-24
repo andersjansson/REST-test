@@ -5,29 +5,61 @@
     <link rel='stylesheet' href='/stylesheets/style.css' />
   </head>
   <body>
-    <div id="todo">
-      <div id="status">There <span id="count"></span> to do</div>
-      <ul id="list">
-      </ul>
-      <form name="form">
-        <input placeholder="Type what to do" id="inputEl"/>
-        <button id="add">Add task</button>
-      </form>
-      <br/>
-      <a href="#" id="clear">Remove done tasks</a>
+    <div id="main">
+      <div id="form">
+        <!-- Edit/Create post -->
+        <script id="post-tpl-form" type="text/x-handlebars-template">
+          <a href="#posts"><- Back</a>  
+          <div class="post" data-id={{id}}>Edit mode: initiated
+            <form name="edit">
+              <input name="title" value="{{title}}" />
+              <textarea name="content">{{content}}</textarea>
+              <button>Save</button>
+            </form>
+          </div>
+          <ul id="input-errors">
+
+          </ul>
+        </script>
+      </div>
+      <div id="single">
+        <div id="post">
+          <!-- Display single post -->
+          <script id="post-tpl-single" type="text/x-handlebars-template">
+            <a href="#posts"><- Back</a>
+            <div class="post" data-id={{id}}>
+              <p class="post-title">{{title}}</p>
+              <p class="post-content">
+                {{content}}
+              </p>
+              <a href="#posts/{{id}}/edit">edit</a>
+              <a href="#posts/{{id}}/delete" class="delete">delete</a>
+            </div>
+          </script>
+        </div>
+      </div>
+      <div id="posts">
+        <!-- Display all posts -->
+        <script id="post-tpl-list" type="text/x-handlebars-template">
+          <a href="#posts/new">New Post</a>
+          {{#each items}}
+            <div class="post" data-id={{id}}>
+              <a href="#posts/{{id}}" class="post-title">{{ title }}</a>
+              <p class="post-content">
+                {{ content }}
+              </p>
+              <a href="#posts/{{id}}/edit">edit</a>
+              <a href="#posts/{{id}}/delete">delete</a>
+            </div>
+          {{/each}}
+        </script>
+      </div>
     </div>
-    <script id="todo-tpl" type="text/x-handlebars-template">
-      {{#each items}}
-        <li>
-          <input type="checkbox" data-id="{{id}}" {{#if done}}checked{{/if}} />
-          {{ value }}
-        </li>
-      {{/each}}
-    </script>
+  
     <script src="/javascripts/jquery-1.11.0.js"></script>
     <script src="/javascripts/handlebars-v1.3.0.js"></script>
     <script src="/javascripts/underscore.js"></script>
     <script src="/javascripts/backbone.js"></script>
-    <script src="/javascripts/todo.js"></script>
+    <script src="/javascripts/post.js"></script>
   </body>
 </html>
