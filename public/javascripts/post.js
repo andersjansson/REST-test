@@ -11,7 +11,7 @@ var Post = Backbone.Model.extend({
 
         if(errors.length > 0){
             return errors;
-        }   
+        }
     }
 });
 
@@ -22,11 +22,20 @@ var PostCollection = Backbone.Collection.extend({
 
 var AllPostsView = Backbone.View.extend({
     template: Handlebars.compile(($("#post-tpl-list").html())),
+    events: {
+        "click .delete" : "delete"
+    },
     render: function() {
         var html = this.template({
             items: this.collection.toJSON()
         });
         this.$el.html(html);
+    },
+    delete: function(e) {
+        e.preventDefault();
+        var id = $(e.target).parent().attr("data-id");
+        var post = app.postCollection.get(id);
+        post.destroy();
     }
 });
 
@@ -61,32 +70,42 @@ var FormView = Backbone.View.extend({
             app.navigate("#posts",{trigger: true});
         }
     }
-
 });
 
 var SingleView = Backbone.View.extend({
     template: Handlebars.compile(($("#post-tpl-single").html())),
     //editTemplate: Handlebars.compile(($("#post-tpl-single-edit").html())),
+    events: {
+        "click .delete" : "delete"
+    },
     render: function(model) {
         var mod = model.toJSON();
         html = this.template(mod);
         this.$el.find("#post").html(html);
+    },
+    delete: function(e) {
+        e.preventDefault();
+        var id = $(e.target).parent().attr("data-id");
+        var post = app.postCollection.get(id);
+        post.destroy();
+        app.navigate("#posts", {trigger: true});
     }
 });
 
 var BlogApp = Backbone.Router.extend({
     routes: {
-        '' : 'index',
-        'posts' : 'index',
-        'posts/new' : 'new',
-        'posts/:id' : 'singleView',
-        'posts/:id/edit' : 'edit',
+        ''                 : 'index',
+        'posts'            : 'index',
+        'posts/new'        : 'new',
+        'posts/:id'        : 'singleView',
+        'posts/:id/edit'   : 'edit',
         'posts/:id/delete' : 'delete'
-        
     },
     initialize: function() {
+        _this = this;
+
         this.postCollection = new PostCollection();
-        this.postCollection.fetch();
+        
         this.views = {
             listView : new AllPostsView({
                 el: "#posts",
@@ -100,10 +119,11 @@ var BlogApp = Backbone.Router.extend({
                 collection: this.postCollection
             })
         };
-        _this = this;
-        this.postCollection.bind("add remove change", _.bind(this.views.listView.render, this.views.listView));
+        
+        this.postCollection.bind("sync add remove change", _.bind(this.views.listView.render, this.views.listView));
+        this.postCollection.fetch();
 
-        //validation fail
+        //handle validation fail
         this.postCollection.on('invalid',function(postCollection,errors){
             var err = _this.views.formView.$el.find("#input-errors");
             var html = "";
@@ -114,10 +134,12 @@ var BlogApp = Backbone.Router.extend({
         });
     },
     showView: function(view, options){
+        //hide all views
         $.each(this.views, function(viewName, viewObject){
             viewObject.$el.hide();
         });
 
+        //render selected view
         if(options != undefined && options.model != undefined)
             view.render(options.model);
         else
@@ -139,27 +161,50 @@ var BlogApp = Backbone.Router.extend({
         }
     },
     delete: function(id){
+        console.log("trying to delete lol");
+        /*
         var post = this.postCollection.get(id);
         if(post != undefined)
             post.destroy();
 
         _this.navigate("#posts",{trigger: true});
+        */
     },
     edit: function(id){
         var post = this.postCollection.get(id);
         if(post != undefined){
-            this.views.formView.model = post;
+        this.views.formView.model = post;
             this.showView(this.views.formView, {model: post});
         }
     }
-    
 });
 
 var app = new BlogApp();
 Backbone.history.start();
-/*
-var posts = new PostCollection();
-var postList = new AllPostsView({
-  el: "#main",
-  collection: posts
-}).render();*/
+
+//add support for "not equal"-comparison in handlebars
+Handlebars.registerHelper('notequal', function(lvalue, rvalue, options) {
+    if (arguments.length < 3)
+        throw new Error("Handlebars Helper notequal needs 2 parameters");
+    if( lvalue != rvalue ) {
+        return options.fn(this);
+    } else {
+        return options.inverse(this);
+    }
+});
+
+//add support for simple date-formatting in handlebars
+Handlebars.registerHelper("niceDate", function(datetime) {
+    var d = new Date(datetime);
+    return d.getFullYear() + "-" 
+         + d.getMonthFormatted() + "-" 
+         + d.getDate() + " " 
+         + d.getHours() + ":" 
+         + d.getMinutes() + ":" 
+         + d.getSeconds();
+});
+
+Date.prototype.getMonthFormatted = function() {
+    var month = this.getMonth();
+    return month < 10 ? '0' + (month+1) : (month+1); 
+}

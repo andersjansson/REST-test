@@ -6,25 +6,25 @@
   </head>
   <body>
     <div id="main">
+      <h1>logbook</h1>
+      <!-- Edit/Create post -->
       <div id="form">
-        <!-- Edit/Create post -->
         <script id="post-tpl-form" type="text/x-handlebars-template">
           <a href="#posts"><- Back</a>  
-          <div class="post" data-id={{id}}>Edit mode: initiated
+          <div class="post" data-id={{id}}>
             <form name="edit">
-              <input name="title" value="{{title}}" />
-              <textarea name="content">{{content}}</textarea>
+              <p>Title <input name="title" value="{{title}}" /></p>
+              <p>Content <textarea name="content">{{content}}</textarea></p>
               <button>Save</button>
             </form>
           </div>
-          <ul id="input-errors">
-
-          </ul>
+          <ul id="input-errors"></ul>
         </script>
       </div>
+
+      <!-- Display single post -->
       <div id="single">
         <div id="post">
-          <!-- Display single post -->
           <script id="post-tpl-single" type="text/x-handlebars-template">
             <a href="#posts"><- Back</a>
             <div class="post" data-id={{id}}>
@@ -32,14 +32,23 @@
               <p class="post-content">
                 {{content}}
               </p>
+              <p class="post-created">Created: {{#niceDate createdAt}}{{/niceDate}}</p>
+              {{#notequal createdAt updatedAt}}
+                <p class="post-modified">
+                <span style="color: red;">Edited</span>: 
+                  {{#niceDate updatedAt}}{{/niceDate}}
+                </p>  
+              {{/notequal}}
+
               <a href="#posts/{{id}}/edit">edit</a>
-              <a href="#posts/{{id}}/delete" class="delete">delete</a>
+              <a href="" class="delete">delete</a>
             </div>
           </script>
         </div>
       </div>
+
+      <!-- Display all posts -->
       <div id="posts">
-        <!-- Display all posts -->
         <script id="post-tpl-list" type="text/x-handlebars-template">
           <a href="#posts/new">New Post</a>
           {{#each items}}
@@ -48,8 +57,15 @@
               <p class="post-content">
                 {{ content }}
               </p>
+              <p class="post-created">Created: {{#niceDate createdAt}}{{/niceDate}}</p>
+              {{#notequal createdAt updatedAt}}
+                <p class="post-modified">
+                <span style="color: red;">Edited</span>: 
+                  {{#niceDate updatedAt}}{{/niceDate}}
+                </p>  
+              {{/notequal}}
               <a href="#posts/{{id}}/edit">edit</a>
-              <a href="#posts/{{id}}/delete">delete</a>
+              <a href="" class="delete">delete</a>
             </div>
           {{/each}}
         </script>

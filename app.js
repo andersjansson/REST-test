@@ -1,4 +1,3 @@
-
 /**
  * Module dependencies.
  */
@@ -9,7 +8,6 @@ var post = require('./routes/post');
 var http = require('http');
 var path = require('path');
 var db = require('./models');
-
 var app = express();
 
 // all environments
