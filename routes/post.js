@@ -6,6 +6,13 @@ exports.index = function(req, res){
   })
 };
 
+exports.show = function(req, res){
+  db.Post.find(req.params.id).success(function(post) {
+    res.json(post);
+  })
+};
+
+
 exports.create = function(req, res){
   db.Post.create(req.body).complete(function(err, post) {
     res.json(post);

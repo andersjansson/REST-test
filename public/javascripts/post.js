@@ -1,4 +1,6 @@
 var Post = Backbone.Model.extend({
+    urlRoot: "/posts",
+
     initialize : function(){
     },
     validate: function(attributes){
@@ -22,6 +24,10 @@ var PostCollection = Backbone.Collection.extend({
 
 var AllPostsView = Backbone.View.extend({
     template: Handlebars.compile(($("#post-tpl-list").html())),
+    initialize: function() {
+
+        this.collection.bind("sync add remove change", _.bind(this.render, this));
+    },
     events: {
         "click .delete" : "delete"
     },
@@ -34,21 +40,21 @@ var AllPostsView = Backbone.View.extend({
     delete: function(e) {
         e.preventDefault();
         var id = $(e.target).parent().attr("data-id");
-        var post = app.postCollection.get(id);
+        var post = this.collection.get(id);
         post.destroy();
     }
 });
 
 var FormView = Backbone.View.extend({
+    initialize: function(){
+        this.collection.fetch();
+    },
     template: Handlebars.compile(($("#post-tpl-form").html())),
     events: {
         "submit form" : "updatePost"
     },
-    render: function(model){
-        if(model != undefined)
-            var mod = model.toJSON();
-
-        html = this.template(mod);
+    render: function(){
+        html = this.template(this.model);
         this.$el.html(html);
     },
     updatePost: function(e){
@@ -59,8 +65,11 @@ var FormView = Backbone.View.extend({
         var success = false;
         var input = {title: topic, content: content};
 
-        if(this.model != undefined)
-            success = this.model.save(input);
+        if(this.model != undefined){
+            var mod = this.collection.get(this.model.id);
+            success = mod.save(input);
+        }
+            
         else
             success = this.collection.create(input,{validate: true});
 
@@ -78,9 +87,8 @@ var SingleView = Backbone.View.extend({
     events: {
         "click .delete" : "delete"
     },
-    render: function(model) {
-        var mod = model.toJSON();
-        html = this.template(mod);
+    render: function(id) {
+        html = this.template(this.model);
         this.$el.find("#post").html(html);
     },
     delete: function(e) {
@@ -112,7 +120,8 @@ var BlogApp = Backbone.Router.extend({
                 collection: this.postCollection
             }),
             singleView : new SingleView({
-                el: "#single"
+                el: "#single",
+                collection: this.postCollection
             }),
             formView : new FormView({
                 el: "#form",
@@ -120,9 +129,6 @@ var BlogApp = Backbone.Router.extend({
             })
         };
         
-        this.postCollection.bind("sync add remove change", _.bind(this.views.listView.render, this.views.listView));
-        this.postCollection.fetch();
-
         //handle validation fail
         this.postCollection.on('invalid',function(postCollection,errors){
             var err = _this.views.formView.$el.find("#input-errors");
@@ -130,24 +136,21 @@ var BlogApp = Backbone.Router.extend({
             $(errors).each(function(index, error){
                 html += "<p>"+error.message+"</p>";
             });
+            
             err.html(html);
         });
     },
-    showView: function(view, options){
+    showView: function(view){
         //hide all views
         $.each(this.views, function(viewName, viewObject){
             viewObject.$el.hide();
         });
 
-        //render selected view
-        if(options != undefined && options.model != undefined)
-            view.render(options.model);
-        else
-            view.render();
-        
+        view.render();
         view.$el.show();
     },
     index: function() {
+        this.postCollection.fetch();
         this.showView(this.views.listView);
     },
     new: function() {
@@ -155,27 +158,20 @@ var BlogApp = Backbone.Router.extend({
         this.showView(this.views.formView);
     },
     singleView: function(id){
-        var post = this.postCollection.get(id);
-        if(post != undefined){
-            this.showView(this.views.singleView, {model: post});
-        }
-    },
-    delete: function(id){
-        console.log("trying to delete lol");
-        /*
-        var post = this.postCollection.get(id);
-        if(post != undefined)
-            post.destroy();
-
-        _this.navigate("#posts",{trigger: true});
-        */
+        var post = new Post({id: id}).fetch().done(function(obj){
+            if(obj != undefined){
+                _this.views.singleView.model = obj;
+                _this.showView(_this.views.singleView);
+            }
+        });
     },
     edit: function(id){
-        var post = this.postCollection.get(id);
-        if(post != undefined){
-        this.views.formView.model = post;
-            this.showView(this.views.formView, {model: post});
-        }
+        var post = new Post({id: id}).fetch().done(function(obj){
+            if(obj != undefined){
+                _this.views.formView.model = obj;
+                _this.showView(_this.views.formView);
+            }
+        });
     }
 });
 

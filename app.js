@@ -30,7 +30,7 @@ if ('development' == app.get('env')) {
 
 app.get('/', routes.index);
 app.get('/posts', post.index);
-app.get('posts/:id', post.index);
+app.get('/posts/:id', post.show);
 app.post('/posts', post.create);
 app.put('/posts/:id', post.update);
 app.delete('/posts/:id', post.destroy);
